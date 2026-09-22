@@ -1,0 +1,1 @@
+export default function Account(){return <main className="hero"><div className="eyebrow">ACCOUNT</div><h1>Welcome to FMFH.</h1><p>Authentication is not connected in this staging shell yet.</p><a className="cta" href="/">Home</a></main>}
