@@ -1,0 +1,1 @@
+export default function Map(){return <main className="hero"><div className="eyebrow">FMFH MAP</div><h1>Explore by map.</h1><p>Mapbox activation is pending. Exact private property coordinates are never exposed to the browser for approximate or hidden listings.</p><a className="cta" href="/">Back home</a></main>}
