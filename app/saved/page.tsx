@@ -1,1 +1,12 @@
-export default function Saved(){return <main className="hero"><div className="eyebrow">SAVED</div><h1>Your saved properties.</h1><p>You have no saved properties yet.</p><a className="cta" href="/search">Start searching</a></main>}
+'use client'
+import { useEffect,useState } from 'react'
+import { createClient } from '../../lib/supabase/client'
+type Saved={property_id:string;fmfh_properties:{title:string;monthly_rent:number;currency:string;city:string}|null}
+export default function Saved(){
+ const [items,setItems]=useState<Saved[]>([]),[message,setMessage]=useState('Loading…')
+ useEffect(()=>{(async()=>{const s=createClient();const {data:{user}}=await s.auth.getUser();if(!user){setMessage('Log in to see your saved properties.');return}
+ const {data,error}=await s.from('fmfh_favorites').select('property_id,fmfh_properties(title,monthly_rent,currency,city)').order('created_at',{ascending:false})
+ if(error){setMessage('Saved properties are temporarily unavailable.');return} setItems((data||[]) as unknown as Saved[]);setMessage(data?.length?'':'You have no saved properties yet.')})()},[])
+ return <main className="hero"><div className="eyebrow">SAVED</div><h1>Your saved properties.</h1>{message&&<p>{message}</p>}
+ <div style={{display:'grid',gap:14}}>{items.map(x=><article className="card" key={x.property_id}><h2>{x.fmfh_properties?.title}</h2><p>{x.fmfh_properties?.city}</p><strong>{x.fmfh_properties?.currency} {Number(x.fmfh_properties?.monthly_rent||0).toLocaleString()}/month</strong></article>)}</div><p><a className="cta" href="/search">Search properties</a></p></main>
+}
