@@ -1,0 +1,1 @@
+export default function Saved(){return <main className="hero"><div className="eyebrow">SAVED</div><h1>Your saved properties.</h1><p>You have no saved properties yet.</p><a className="cta" href="/search">Start searching</a></main>}
