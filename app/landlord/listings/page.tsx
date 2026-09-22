@@ -1,0 +1,1 @@
+export default function Listings(){return <main className="hero"><div className="eyebrow">LANDLORD</div><h1>Your listings.</h1><p>No live landlord listings are connected yet.</p><a className="cta" href="/">FMFH Home</a></main>}
