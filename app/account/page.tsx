@@ -19,7 +19,7 @@ export default function Account() {
     const mode=(e.nativeEvent as SubmitEvent).submitter?.getAttribute('value')==='signup'?'signup':'login'
     setWorking(true);setMessage('Working…')
     const result=mode==='signup'
-      ? await supabase.auth.signUp({email,password})
+      ? await supabase.auth.signUp({email,password,options:{emailRedirectTo:'https://find-my-future-home-6228.vercel.app/account'}})
       : await supabase.auth.signInWithPassword({email,password})
     setWorking(false)
     if(result.error){setMessage(result.error.message);return}
