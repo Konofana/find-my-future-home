@@ -13,7 +13,7 @@ export default function RentalMap({pins,onChoose}:{pins?:Pin[];onChoose?:(lat:nu
   let cleanup=()=>{}
   import('leaflet').then(L=>{
    if(disposed||!el.current)return
-   const map=L.map(el.current,{scrollWheelZoom:false}).setView([39,-98],4)
+   const map=L.map(el.current,{scrollWheelZoom:false}).setView([-29,24],5)
    L.tileLayer(tiles,{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',maxZoom:19}).addTo(map)
    const points:import('leaflet').LatLngExpression[]=[]
    for(const pin of pins||[]){
