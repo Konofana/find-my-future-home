@@ -8,5 +8,5 @@ export default function Saved(){
  const {data,error}=await s.from('fmfh_favorites').select('property_id,fmfh_properties(title,monthly_rent,currency,city)').order('created_at',{ascending:false})
  if(error){setMessage('Saved properties are temporarily unavailable.');return} setItems((data||[]) as unknown as Saved[]);setMessage(data?.length?'':'You have no saved properties yet.')})()},[])
  return <main className="hero"><div className="eyebrow">SAVED</div><h1>Your saved properties.</h1>{message&&<p>{message}</p>}
- <div style={{display:'grid',gap:14}}>{items.map(x=><article className="card" key={x.property_id}><h2>{x.fmfh_properties?.title}</h2><p>{x.fmfh_properties?.city}</p><strong>{x.fmfh_properties?.currency} {Number(x.fmfh_properties?.monthly_rent||0).toLocaleString()}/month</strong></article>)}</div><p><a className="cta" href="/search">Search properties</a></p></main>
+ <div style={{display:'grid',gap:14}}>{items.map(x=><article className="card" key={x.property_id}><h2><a href={`/property/${x.property_id}`}>{x.fmfh_properties?.title}</a></h2><p>{x.fmfh_properties?.city}</p><strong>{x.fmfh_properties?.currency} {Number(x.fmfh_properties?.monthly_rent||0).toLocaleString()}/month</strong></article>)}</div><p><a className="cta" href="/search">Search properties</a></p></main>
 }
