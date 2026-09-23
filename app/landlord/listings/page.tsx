@@ -12,6 +12,7 @@ export default function Listings(){
  const [items,setItems]=useState<Listing[]>([])
  const [inquiries,setInquiries]=useState<Inquiry[]>([])
  const [photos,setPhotos]=useState<Photo[]>([])
+ const [authState,setAuthState]=useState<'checking'|'signed-out'|'signed-in'>('checking')
  const [message,setMessage]=useState('')
  const [point,setPoint]=useState<{lat:number;lng:number}|null>(null)
  const [editing,setEditing]=useState<string|null>(null)
@@ -22,7 +23,8 @@ export default function Listings(){
  async function load(){
   const s=createClient()
   const {data:{user}}=await s.auth.getUser()
-  if(!user){setMessage('Log in first to manage landlord listings.');return}
+  if(!user){setAuthState('signed-out');return}
+  setAuthState('signed-in')
   const [{data,error},{data:messages,error:inquiryError},{data:photoRows,error:photoError}]=await Promise.all([
    s.from('fmfh_properties').select('id,title,description,status,property_type,monthly_rent,currency,city,region,country_code,map_lat,map_lng,bedrooms,bathrooms,furnished,parking,available_from').eq('owner_id',user.id).order('created_at',{ascending:false}),
    s.from('fmfh_inquiries').select('id,contact_email,message,created_at,fmfh_properties(title)').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50),
@@ -81,6 +83,8 @@ export default function Listings(){
   if(error){setMessage(error.message);return}
   setEditing(null);setMessage('Listing updated.');await load()
  }
+ if(authState==='checking')return <main className="hero"><h1>Checking your account…</h1></main>
+ if(authState==='signed-out')return <main className="hero"><a href="/">← Home</a><div className="eyebrow" style={{marginTop:28}}>LANDLORD</div><h1>List your rental property.</h1><p>Log in or create an account to add a rental, upload photos and publish it.</p><a className="cta" style={{display:'inline-block'}} href="/account">Log in or create account</a></main>
  return <main className="hero"><a href="/">← Home</a><div className="eyebrow" style={{marginTop:28}}>LANDLORD</div><h1>Your listings.</h1>
   <h2>Create a rental listing</h2><form onSubmit={add} style={{display:'grid',gap:12,maxWidth:650}}>
    <input name="title" aria-label="Listing title" placeholder="Listing title" required maxLength={120}/>
