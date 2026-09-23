@@ -1,9 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import SaveButton from '../../search/save-button'
 import InquiryForm from './inquiry-form'
 
 type Property={id:string;owner_id:string;title:string;description:string|null;property_type:string;monthly_rent:number;currency:string;bedrooms:number|null;bathrooms:number|null;city:string;region:string|null;country_code:string;furnished:boolean;parking:boolean;available_from:string|null}
+
+export async function generateMetadata({params}:{params:Promise<{id:string}>}):Promise<Metadata>{
+ const {id}=await params
+ if(!/^[0-9a-f-]{36}$/i.test(id))return {title:'Rental not found'}
+ const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!)
+ const {data}=await supabase.from('fmfh_public_properties').select('title,city,description').eq('id',id).maybeSingle()
+ if(!data)return {title:'Rental not found'}
+ const title=`${data.title} in ${data.city} | FMFH`
+ const description=(data.description||`View this rental in ${data.city} on Find My Future Home.`).slice(0,160)
+ return {title,description,alternates:{canonical:`/property/${id}`},openGraph:{title,description,url:`/property/${id}`}}
+}
 
 export default async function PropertyPage({params}:{params:Promise<{id:string}>}){
  const {id}=await params
