@@ -63,7 +63,7 @@ export default function Listings(){
   if(!user){setMessage('Log in first.');return}
   const {error}=await s.from('fmfh_properties').update({status,...(status==='published'?{published_at:new Date().toISOString()}:{})}).eq('id',id).eq('owner_id',user.id)
   if(error){setMessage(error.message);return}
-  setMessage(status==='published'?'Listing published.':'Listing marked as rented.');await load()
+  setMessage(status==='published'?'Listing is available in public search again.':'Listing marked as rented and removed from public search.');await load()
  }
  async function save(event:FormEvent<HTMLFormElement>,id:string){
   event.preventDefault()
@@ -129,7 +129,8 @@ export default function Listings(){
    </form>:<p><button type="button" onClick={()=>{setEditing(x.id);setEditPoint(x.map_lat!==null&&x.map_lng!==null?{lat:x.map_lat,lng:x.map_lng}:null)}}>Edit listing</button></p>}
    <PhotoManager propertyId={x.id} photos={photos.filter(p=>p.property_id===x.id)} onChange={load}/>
    {x.status==='draft'&&<p><button className="cta" type="button" onClick={()=>changeStatus(x.id,'published')}>Publish listing</button></p>}
-   {x.status==='published'&&<p><a href={`/property/${x.id}`}>View public page</a> · <button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}/property/${x.id}`);setMessage('Listing link copied.')}catch{setMessage('Could not copy the link. Open the public page and copy its address.')}}}>Copy listing link</button> · <button type="button" onClick={()=>changeStatus(x.id,'rented')}>Mark as rented</button></p>}
+   {x.status==='rented'&&<p>This listing is hidden from renters. If it is still available, <button className="cta" type="button" onClick={()=>changeStatus(x.id,'published')}>Make available again</button></p>}
+   {x.status==='published'&&<p><a href={`/property/${x.id}`}>View public page</a> · <button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}/property/${x.id}`);setMessage('Listing link copied.')}catch{setMessage('Could not copy the link. Open the public page and copy its address.')}}}>Copy listing link</button> · <button type="button" onClick={()=>{if(window.confirm('Mark this property as rented? It will disappear from public search.'))void changeStatus(x.id,'rented')}}>Mark as rented</button></p>}
   </article>)}</section>
   <section style={{marginTop:48}}><h2>Renter inquiries</h2>{inquiries.length===0?<p>No inquiries yet.</p>:<div style={{display:'grid',gap:14}}>{inquiries.map(x=><article className="card" key={x.id}><h3>{x.fmfh_properties?.title||'Rental inquiry'}</h3><p>{x.message}</p><p>Reply to <a href={`mailto:${encodeURIComponent(x.contact_email)}`}>{x.contact_email}</a></p><small>{new Date(x.created_at).toLocaleDateString()}</small></article>)}</div>}</section>
  </main>
