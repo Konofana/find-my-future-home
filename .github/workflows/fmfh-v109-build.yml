@@ -18,6 +18,9 @@ jobs:
       - name: Install from generated lockfile
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Build Next.js
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-build-placeholder
         run: npm run build
       - name: Upload generated lockfile
         uses: actions/upload-artifact@v4
