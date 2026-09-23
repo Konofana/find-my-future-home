@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase/client'
 import RentalMap from '../../map/rental-map'
+import PhotoManager, { type Photo } from './photo-manager'
 
 type Listing={id:string;title:string;description:string|null;status:string;property_type:string;monthly_rent:number;currency:string;city:string;region:string|null;country_code:string;map_lat:number|null;map_lng:number|null;bedrooms:number|null;bathrooms:number|null;furnished:boolean;parking:boolean;available_from:string|null}
 type Inquiry={id:string;contact_email:string;message:string;created_at:string;fmfh_properties:{title:string}|null}
@@ -10,6 +11,7 @@ type Inquiry={id:string;contact_email:string;message:string;created_at:string;fm
 export default function Listings(){
  const [items,setItems]=useState<Listing[]>([])
  const [inquiries,setInquiries]=useState<Inquiry[]>([])
+ const [photos,setPhotos]=useState<Photo[]>([])
  const [message,setMessage]=useState('')
  const [point,setPoint]=useState<{lat:number;lng:number}|null>(null)
  const [editing,setEditing]=useState<string|null>(null)
@@ -21,13 +23,15 @@ export default function Listings(){
   const s=createClient()
   const {data:{user}}=await s.auth.getUser()
   if(!user){setMessage('Log in first to manage landlord listings.');return}
-  const [{data,error},{data:messages,error:inquiryError}]=await Promise.all([
+  const [{data,error},{data:messages,error:inquiryError},{data:photoRows,error:photoError}]=await Promise.all([
    s.from('fmfh_properties').select('id,title,description,status,property_type,monthly_rent,currency,city,region,country_code,map_lat,map_lng,bedrooms,bathrooms,furnished,parking,available_from').eq('owner_id',user.id).order('created_at',{ascending:false}),
-   s.from('fmfh_inquiries').select('id,contact_email,message,created_at,fmfh_properties(title)').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50)
+   s.from('fmfh_inquiries').select('id,contact_email,message,created_at,fmfh_properties(title)').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50),
+   s.from('fmfh_property_photos').select('id,property_id,storage_path').order('created_at',{ascending:true})
   ])
   if(error){setMessage('Could not load listings.');return}
   setItems((data||[]) as Listing[])
   if(!inquiryError)setInquiries((messages||[]) as unknown as Inquiry[])
+  if(!photoError)setPhotos((photoRows||[]) as Photo[])
  }
  useEffect(()=>{void load()},[])
 
@@ -49,7 +53,7 @@ export default function Listings(){
    status:'draft',map_lat:point?.lat??null,map_lng:point?.lng??null
   })
   if(error){setMessage(error.message);return}
-  form.reset();setPoint(null);setMessage('Draft listing created. Review it below, then publish.');await load()
+  form.reset();setPoint(null);setMessage('Draft created. Add photos below, review the details, then publish.');await load()
  }
  async function changeStatus(id:string,status:'published'|'rented'){
   const s=createClient()
@@ -119,6 +123,7 @@ export default function Listings(){
     {editPoint&&<button type="button" onClick={()=>setEditPoint(null)}>Remove map point</button>}
     <button className="cta" type="submit">Save listing</button><button type="button" onClick={()=>setEditing(null)}>Cancel</button>
    </form>:<p><button type="button" onClick={()=>{setEditing(x.id);setEditPoint(x.map_lat!==null&&x.map_lng!==null?{lat:x.map_lat,lng:x.map_lng}:null)}}>Edit listing</button></p>}
+   <PhotoManager propertyId={x.id} photos={photos.filter(p=>p.property_id===x.id)} onChange={load}/>
    {x.status==='draft'&&<p><button className="cta" type="button" onClick={()=>changeStatus(x.id,'published')}>Publish listing</button></p>}
    {x.status==='published'&&<p><a href={`/property/${x.id}`}>View public page</a> · <button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}/property/${x.id}`);setMessage('Listing link copied.')}catch{setMessage('Could not copy the link. Open the public page and copy its address.')}}}>Copy listing link</button> · <button type="button" onClick={()=>changeStatus(x.id,'rented')}>Mark as rented</button></p>}
   </article>)}</section>
