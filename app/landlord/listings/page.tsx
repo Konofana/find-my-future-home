@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from 'react'
 import { createClient } from '../../../lib/supabase/client'
 import RentalMap from '../../map/rental-map'
 
-type Listing={id:string;title:string;description:string|null;status:string;property_type:string;monthly_rent:number;currency:string;city:string;region:string|null;country_code:string;map_lat:number|null;map_lng:number|null}
+type Listing={id:string;title:string;description:string|null;status:string;property_type:string;monthly_rent:number;currency:string;city:string;region:string|null;country_code:string;map_lat:number|null;map_lng:number|null;bedrooms:number|null;bathrooms:number|null;furnished:boolean;parking:boolean;available_from:string|null}
 type Inquiry={id:string;contact_email:string;message:string;created_at:string;fmfh_properties:{title:string}|null}
 
 export default function Listings(){
@@ -22,7 +22,7 @@ export default function Listings(){
   const {data:{user}}=await s.auth.getUser()
   if(!user){setMessage('Log in first to manage landlord listings.');return}
   const [{data,error},{data:messages,error:inquiryError}]=await Promise.all([
-   s.from('fmfh_properties').select('id,title,description,status,property_type,monthly_rent,currency,city,region,country_code,map_lat,map_lng').eq('owner_id',user.id).order('created_at',{ascending:false}),
+   s.from('fmfh_properties').select('id,title,description,status,property_type,monthly_rent,currency,city,region,country_code,map_lat,map_lng,bedrooms,bathrooms,furnished,parking,available_from').eq('owner_id',user.id).order('created_at',{ascending:false}),
    s.from('fmfh_inquiries').select('id,contact_email,message,created_at,fmfh_properties(title)').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50)
   ])
   if(error){setMessage('Could not load listings.');return}
@@ -43,6 +43,9 @@ export default function Listings(){
    monthly_rent:Number(fd.get('rent')),currency:String(fd.get('currency')).toUpperCase(),
    city:String(fd.get('city')).trim(),region:String(fd.get('region')||'').trim(),
    country_code:String(fd.get('country')).toUpperCase(),description:String(fd.get('description')||'').trim(),
+   bedrooms:fd.get('bedrooms')===''?null:Number(fd.get('bedrooms')),
+   bathrooms:fd.get('bathrooms')===''?null:Number(fd.get('bathrooms')),
+   furnished:fd.has('furnished'),parking:fd.has('parking'),available_from:String(fd.get('available_from')||'')||null,
    status:'draft',map_lat:point?.lat??null,map_lng:point?.lng??null
   })
   if(error){setMessage(error.message);return}
@@ -66,7 +69,10 @@ export default function Listings(){
    title:String(fd.get('title')).trim(),description:String(fd.get('description')||'').trim(),
    monthly_rent:Number(fd.get('rent')),currency:String(fd.get('currency')).toUpperCase(),
    city:String(fd.get('city')).trim(),region:String(fd.get('region')||'').trim(),
-   country_code:String(fd.get('country')).toUpperCase(),map_lat:editPoint?.lat??null,map_lng:editPoint?.lng??null
+   country_code:String(fd.get('country')).toUpperCase(),map_lat:editPoint?.lat??null,map_lng:editPoint?.lng??null,
+   bedrooms:fd.get('bedrooms')===''?null:Number(fd.get('bedrooms')),
+   bathrooms:fd.get('bathrooms')===''?null:Number(fd.get('bathrooms')),
+   furnished:fd.has('furnished'),parking:fd.has('parking'),available_from:String(fd.get('available_from')||'')||null
   }).eq('id',id).eq('owner_id',user.id)
   if(error){setMessage(error.message);return}
   setEditing(null);setMessage('Listing updated.');await load()
@@ -80,6 +86,11 @@ export default function Listings(){
    <input name="city" aria-label="City" placeholder="City" required/>
    <input name="region" aria-label="State or region" placeholder="State or region"/>
    <input name="country" aria-label="Two-letter country code" defaultValue="ZA" pattern="[A-Za-z]{2}" maxLength={2} title="Two-letter country code, such as ZA" required/>
+   <input name="bedrooms" aria-label="Bedrooms" type="number" min="0" max="100" step="1" placeholder="Bedrooms (optional)"/>
+   <input name="bathrooms" aria-label="Bathrooms" type="number" min="0" max="100" step="0.5" placeholder="Bathrooms (optional)"/>
+   <input name="available_from" aria-label="Available from" type="date"/>
+   <label><input name="furnished" type="checkbox"/> Furnished</label>
+   <label><input name="parking" type="checkbox"/> Parking available</label>
    <textarea name="description" aria-label="Property description" placeholder="Description" rows={4}/>
    <label>Optional: tap the map to show an approximate location to renters. Do not select your exact private address.</label>
    <RentalMap onChoose={choose}/>
@@ -98,6 +109,11 @@ export default function Listings(){
     <input name="city" aria-label="Edit city" defaultValue={x.city} required/>
     <input name="region" aria-label="Edit region" defaultValue={x.region||''}/>
     <input name="country" aria-label="Edit country code" defaultValue={x.country_code} pattern="[A-Za-z]{2}" maxLength={2} required/>
+    <input name="bedrooms" aria-label="Edit bedrooms" type="number" min="0" max="100" step="1" defaultValue={x.bedrooms??''} placeholder="Bedrooms"/>
+    <input name="bathrooms" aria-label="Edit bathrooms" type="number" min="0" max="100" step="0.5" defaultValue={x.bathrooms??''} placeholder="Bathrooms"/>
+    <input name="available_from" aria-label="Edit available from" type="date" defaultValue={x.available_from??''}/>
+    <label><input name="furnished" type="checkbox" defaultChecked={x.furnished}/> Furnished</label>
+    <label><input name="parking" type="checkbox" defaultChecked={x.parking}/> Parking available</label>
     <label>Tap the map to change the approximate public point.</label><RentalMap onChoose={chooseEdit}/>
     <span role="status">{editPoint?`Map point: ${editPoint.lat.toFixed(4)}, ${editPoint.lng.toFixed(4)}`:'No map point selected.'}</span>
     {editPoint&&<button type="button" onClick={()=>setEditPoint(null)}>Remove map point</button>}
