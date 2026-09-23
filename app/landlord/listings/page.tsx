@@ -76,10 +76,10 @@ export default function Listings(){
    <input name="title" aria-label="Listing title" placeholder="Listing title" required maxLength={120}/>
    <select name="type" aria-label="Property type" defaultValue="apartment"><option value="apartment">Apartment</option><option value="house">House</option><option value="room">Room</option><option value="condo">Condo</option><option value="townhouse">Townhouse</option><option value="office">Office</option><option value="retail">Retail</option><option value="restaurant">Restaurant</option><option value="warehouse">Warehouse</option><option value="industrial">Industrial</option><option value="land">Land</option><option value="other">Other</option></select>
    <input name="rent" aria-label="Monthly rent" type="number" min="0" step="0.01" placeholder="Monthly rent" required/>
-   <input name="currency" aria-label="Currency code" defaultValue="USD" pattern="[A-Za-z]{3}" maxLength={3} title="Three-letter currency code, such as USD or ZAR" required/>
+   <input name="currency" aria-label="Currency code" defaultValue="ZAR" pattern="[A-Za-z]{3}" maxLength={3} title="Three-letter currency code, such as ZAR" required/>
    <input name="city" aria-label="City" placeholder="City" required/>
    <input name="region" aria-label="State or region" placeholder="State or region"/>
-   <input name="country" aria-label="Two-letter country code" defaultValue="US" pattern="[A-Za-z]{2}" maxLength={2} title="Two-letter country code, such as US or ZA" required/>
+   <input name="country" aria-label="Two-letter country code" defaultValue="ZA" pattern="[A-Za-z]{2}" maxLength={2} title="Two-letter country code, such as ZA" required/>
    <textarea name="description" aria-label="Property description" placeholder="Description" rows={4}/>
    <label>Optional: tap the map to show an approximate location to renters. Do not select your exact private address.</label>
    <RentalMap onChoose={choose}/>
@@ -104,7 +104,7 @@ export default function Listings(){
     <button className="cta" type="submit">Save listing</button><button type="button" onClick={()=>setEditing(null)}>Cancel</button>
    </form>:<p><button type="button" onClick={()=>{setEditing(x.id);setEditPoint(x.map_lat!==null&&x.map_lng!==null?{lat:x.map_lat,lng:x.map_lng}:null)}}>Edit listing</button></p>}
    {x.status==='draft'&&<p><button className="cta" type="button" onClick={()=>changeStatus(x.id,'published')}>Publish listing</button></p>}
-   {x.status==='published'&&<p><a href={`/property/${x.id}`}>View public page</a> · <button type="button" onClick={()=>changeStatus(x.id,'rented')}>Mark as rented</button></p>}
+   {x.status==='published'&&<p><a href={`/property/${x.id}`}>View public page</a> · <button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}/property/${x.id}`);setMessage('Listing link copied.')}catch{setMessage('Could not copy the link. Open the public page and copy its address.')}}}>Copy listing link</button> · <button type="button" onClick={()=>changeStatus(x.id,'rented')}>Mark as rented</button></p>}
   </article>)}</section>
   <section style={{marginTop:48}}><h2>Renter inquiries</h2>{inquiries.length===0?<p>No inquiries yet.</p>:<div style={{display:'grid',gap:14}}>{inquiries.map(x=><article className="card" key={x.id}><h3>{x.fmfh_properties?.title||'Rental inquiry'}</h3><p>{x.message}</p><p>Reply to <a href={`mailto:${encodeURIComponent(x.contact_email)}`}>{x.contact_email}</a></p><small>{new Date(x.created_at).toLocaleDateString()}</small></article>)}</div>}</section>
  </main>

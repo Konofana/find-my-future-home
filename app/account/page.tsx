@@ -34,5 +34,5 @@ export default function Account() {
         <button className="cta" onClick={e=>submit(e as any,'signup')}>Create account</button>
       </div>
     </form>}
-    {message&&<p>{message}</p>}<p><a href="/">Home</a></p></main>
+    {message&&<p>{message}</p>}<p><a href="/landlord/listings">List your rental property</a> · <a href="/">Home</a></p></main>
 }
